@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Comunitario de Agua</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+  <main id="app">
+    <section id="authView" class="auth-layout">
+      <div class="brand-panel">
+        <span class="pill">Proyecto III · Release 1</span>
+        <h1>Sistema de Gestión y Control del Agua</h1>
+        <p>Monitoreo de cisterna, consumo mensual, pagos, censo, mantenimiento y notificaciones para una comunidad rural.</p>
+      </div>
+      <div class="auth-card">
+        <div class="tabs">
+          <button class="tab active" data-auth-tab="login">Login</button>
+          <button class="tab" data-auth-tab="register">Registro</button>
+        </div>
+        <form id="loginForm" class="form stack">
+          <h2>Iniciar sesión</h2>
+          <label>DPI<input name="dpi" value="1234567890101" required /></label>
+          <label>Contraseña<input name="password" type="password" value="Admin123*" required /></label>
+          <button type="submit">Entrar</button>
+          <small>Usuario demo: 1234567890101 / Admin123*</small>
+        </form>
+        <form id="registerForm" class="form stack hidden">
+          <h2>Registrar usuario</h2>
+          <div class="grid two">
+            <label>Nombre<input name="firstName" required /></label>
+            <label>Apellido<input name="lastName" required /></label>
+          </div>
+          <label>Dirección<input name="address" required /></label>
+          <label>DPI<input name="dpi" required /></label>
+          <label>Rol
+            <select name="role">
+              <option value="empleado">Empleado</option>
+              <option value="administrador">Administrador</option>
+              <option value="soporte">Soporte</option>
+              <option value="cliente">Cliente</option>
+            </select>
+          </label>
+          <div class="grid two">
+            <label>Contraseña<input name="password" type="password" required /></label>
+            <label>Confirmar<input name="confirmPassword" type="password" required /></label>
+          </div>
+          <button type="submit">Crear cuenta</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="mainView" class="hidden shell">
+      <aside class="sidebar">
+        <h2>Agua Comunitaria</h2>
+        <p id="userLabel"></p>
+        <nav>
+          <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+          <button class="nav-btn" data-view="agua">Agua almacenada</button>
+          <button class="nav-btn" data-view="viviendas">Viviendas y censo</button>
+          <button class="nav-btn" data-view="consumos">Consumo mensual</button>
+          <button class="nav-btn" data-view="pagos">Pagos</button>
+          <button class="nav-btn" data-view="distribucion">Distribución</button>
+          <button class="nav-btn" data-view="mantenimiento">Mantenimiento</button>
+          <button class="nav-btn" data-view="notificaciones">Notificaciones</button>
+        </nav>
+        <button id="logoutBtn" class="ghost">Cerrar sesión</button>
+      </aside>
+
+      <section class="content">
+        <header class="topbar">
+          <button id="refreshBtn">Actualizar</button>
+        </header>
+
+        <section id="dashboard" class="view-section"></section>
+
+        <section id="agua" class="view-section hidden">
+          <div class="card">
+            <h2>Configurar cisterna / edición manual</h2>
+            <form id="cisternForm" class="grid four form-inline">
+              <div class="field-group">
+                <label>Nombre de la cisterna</label>
+                <input name="name" value="Cisterna principal" />
+              </div>
+
+              <div class="field-group">
+                <label>Capacidad total (litros)</label>
+                <input name="capacityLiters" type="number" step="0.01" required />
+              </div>
+
+              <div class="field-group">
+                <label>Nivel actual</label>
+                <input name="currentLiters" type="number" step="0.01" required />
+              </div>
+
+              <div class="field-group">
+                <label>Umbral mínimo</label>
+                <input name="minThreshold" type="number" step="0.01" required />
+              </div>
+
+              <div class="field-group">
+                <label>Umbral máximo</label>
+                <input name="maxThreshold" type="number" step="0.01" />
+              </div>
+
+              <div class="field-group">
+                <label>Observación</label>
+                <input name="observation" placeholder="Escriba una observación" />
+              </div>
+
+              <div class="field-group button-group">
+                <label>&nbsp;</label>
+                <button type="submit">Guardar cisterna</button>
+              </div>
+
+            </form>
+          </div>
+          <div class="card">
+            <h2>Simular lectura del sensor</h2>
+            <form id="sensorForm" class="grid three form-inline">
+              <input name="liters" type="number" step="0.01" placeholder="Litros detectados" required />
+              <input name="observation" placeholder="Observación" />
+              <button type="submit">Enviar lectura</button>
+            </form>
+          </div>
+          <div class="card"><h2>Historial de lecturas</h2><div id="readingsTable"></div></div>
+        </section>
+
+        <section id="viviendas" class="view-section hidden">
+          <div class="grid two">
+            <div class="card">
+              <h2>Registrar vivienda</h2>
+              <form id="houseForm" class="stack">
+                <input name="houseNumber" placeholder="Número de casa" required />
+                <input name="ownerName" placeholder="Propietario" required />
+                <input name="address" placeholder="Dirección / sector" />
+                <button type="submit">Guardar vivienda</button>
+              </form>
+            </div>
+            <div class="card">
+              <h2>Registrar habitante</h2>
+              <form id="residentForm" class="stack">
+                <select name="houseId" class="housesSelect" required></select>
+                <input name="firstName" placeholder="Nombre" required />
+                <input name="lastName" placeholder="Apellido" required />
+                <input name="identification" placeholder="Identificación" />
+                <label class="check"><input name="isMinor" type="checkbox" /> Es menor de edad</label>
+                <button type="submit">Guardar habitante</button>
+              </form>
+            </div>
+          </div>
+          <div class="card"><h2>Viviendas</h2><div id="housesTable"></div></div>
+          <div class="card"><h2>Habitantes</h2><div id="residentsTable"></div></div>
+        </section>
+
+        <section id="consumos" class="view-section hidden">
+          <div class="card">
+            <h2>Registrar consumo mensual</h2>
+            <form id="consumptionForm" class="grid four form-inline">
+              <select name="houseId" class="housesSelect" required></select>
+              <input name="period" type="month" required />
+              <input name="liters" type="number" step="0.01" placeholder="Litros" required />
+              <input name="observation" placeholder="Observación" />
+              <button type="submit">Guardar consumo</button>
+            </form>
+          </div>
+          <div class="card"><h2>Historial de consumo</h2><div id="consumptionsTable"></div></div>
+        </section>
+
+        <section id="pagos" class="view-section hidden">
+          <div class="card">
+            <h2>Registrar pago de mantenimiento</h2>
+            <form id="paymentForm" class="grid four form-inline">
+              <select name="houseId" class="housesSelect" required></select>
+              <input name="period" type="month" required />
+              <input name="amount" type="number" step="0.01" placeholder="Monto" required />
+              <input name="receiptNumber" placeholder="No. recibo" />
+              <button type="submit">Guardar pago</button>
+            </form>
+          </div>
+          <div class="grid two">
+            <div class="card"><h2>Pagos</h2><div id="paymentsTable"></div></div>
+            <div class="card"><h2>Morosidad</h2><button id="checkDelinquencyBtn">Evaluar 2 períodos</button><div id="delinquencyTable"></div></div>
+          </div>
+        </section>
+
+        <section id="distribucion" class="view-section hidden">
+          <div class="card">
+            <h2>Planificar distribución semanal</h2>
+            <form id="distributionForm" class="grid four form-inline">
+              <input name="serviceDate" type="date" required />
+              <input name="startTime" type="time" required />
+              <input name="endTime" type="time" required />
+              <input name="notes" placeholder="Observaciones" />
+              <button type="submit">Guardar planificación</button>
+            </form>
+          </div>
+          <div class="card"><h2>Planificaciones</h2><div id="distributionTable"></div></div>
+        </section>
+
+        <section id="mantenimiento" class="view-section hidden">
+          <div class="grid two">
+            <div class="card">
+              <h2>Crear orden</h2>
+              <form id="maintenanceForm" class="stack">
+                <input name="orderDate" type="date" />
+                <input name="maintenanceType" placeholder="Tipo" required />
+                <input name="responsible" placeholder="Responsable" required />
+                <textarea name="description" placeholder="Descripción" required></textarea>
+                <textarea name="observations" placeholder="Observaciones"></textarea>
+                <button type="submit">Crear orden</button>
+              </form>
+            </div>
+            <div class="card">
+              <h2>Registrar intervención</h2>
+              <form id="interventionForm" class="stack">
+                <select name="orderId" id="ordersSelect" required></select>
+                <input name="interventionType" placeholder="Tipo intervención" required />
+                <select name="status"><option value="finalizada">Finalizada</option><option value="en_proceso">En proceso</option><option value="pendiente">Pendiente</option></select>
+                <textarea name="observations" placeholder="Observaciones"></textarea>
+                <button type="submit">Guardar intervención</button>
+              </form>
+            </div>
+          </div>
+          <div class="card"><h2>Órdenes</h2><div id="maintenanceTable"></div></div>
+        </section>
+
+        <section id="notificaciones" class="view-section hidden">
+          <div class="card"><h2>Notificaciones</h2><div id="notificationsList"></div></div>
+        </section>
+      </section>
+    </section>
+  </main>
+  <div id="toast" class="toast hidden"></div>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

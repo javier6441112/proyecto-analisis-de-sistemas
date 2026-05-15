@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: agua_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agua_db
+      POSTGRES_USER: agua_user
+      POSTGRES_PASSWORD: agua_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  web:
+    build: .
+    container_name: agua_flask
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: cambia-esta-clave
+      JWT_SECRET: cambia-esta-clave-jwt
+      DATABASE_URL: postgresql+psycopg2://agua_user:agua_pass@db:5432/agua_db
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+volumes:
+  postgres_data:
