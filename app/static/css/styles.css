@@ -81,6 +81,43 @@ th { color: var(--muted); font-size: .82rem; text-transform: uppercase; letter-s
   .cards, .grid.two, .grid.three, .grid.four { grid-template-columns: 1fr; }
 }
 
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.calendar-cell {
+  background: white;
+  border: 1px solid rgba(15, 64, 70, 0.12);
+  border-radius: 20px;
+  padding: 1rem;
+  text-align: center;
+  min-height: 100px;
+  display: grid;
+  place-content: center;
+  gap: 0.45rem;
+}
+
+.calendar-cell.registered {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
+}
+
+.calendar-cell strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.calendar-cell span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.calendar-cell.registered span {
+  color: #2563eb;
+}
 
 .field-group {
   display: flex;

@@ -63,6 +63,41 @@ function renderTable(containerSelector, rows, columns, options = {}) {
   container.innerHTML = `${table(pageRows, columns)}${paginationControls(tableId, rows.length, state.page)}`;
 }
 
+function renderConsumptionCalendar(rows, houseId) {
+  const container = $('#consumptionCalendar');
+  if (!container) return;
+
+  if (!houseId) {
+    container.innerHTML = '<p class="muted">Seleccione una vivienda para ver el calendario de consumos.</p>';
+    return;
+  }
+
+  const registeredPeriods = new Set((rows || []).map(r => r.period));
+  if (!registeredPeriods.size) {
+    container.innerHTML = '<p class="muted">No hay consumos registrados para esta vivienda.</p>';
+    return;
+  }
+
+  const today = new Date();
+  const months = [];
+  for (let i = 11; i >= 0; i -= 1) {
+    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    months.push({
+      key,
+      label: date.toLocaleString('es-ES', { month: 'short', year: 'numeric' }),
+      active: registeredPeriods.has(key),
+    });
+  }
+
+  container.innerHTML = months.map((month) => `
+    <div class="calendar-cell ${month.active ? 'registered' : ''}">
+      <strong>${month.label}</strong>
+      <span>${month.active ? 'Registrado' : 'Sin registro'}</span>
+    </div>
+  `).join('');
+}
+
 function refreshTable(tableId) {
   const state = tableStates[tableId];
   if (!state) return;
@@ -199,6 +234,15 @@ async function loadHouses() {
   $$('.housesSelect').forEach(select => {
     select.innerHTML = '<option value="">Seleccione vivienda</option>' + houses.map(h => `<option value="${h.id}">${h.houseNumber} - ${h.ownerName}</option>`).join('');
   });
+
+  const consumptionHouseSelect = document.querySelector('#consumptionForm select[name="houseId"]');
+  if (consumptionHouseSelect && !consumptionHouseSelect.dataset.calendarListenerAttached) {
+    consumptionHouseSelect.addEventListener('change', () => {
+      loadConsumptions(consumptionHouseSelect.value);
+    });
+    consumptionHouseSelect.dataset.calendarListenerAttached = 'true';
+  }
+
   renderTable('#housesTable', houses, [
     {label:'Casa', key:'houseNumber'}, {label:'Propietario', key:'ownerName'}, {label:'Dirección', key:'address'}, {label:'Habitantes', key:'residentsCount'}, {label:'Estado', key:'status'}
   ]);
@@ -208,11 +252,12 @@ async function loadHouses() {
   ]);
 }
 
-async function loadConsumptions() {
-  const rows = await api('/consumptions');
+async function loadConsumptions(houseId = '') {
+  const rows = await api(`/consumptions${houseId ? `?houseId=${houseId}` : ''}`);
   renderTable('#consumptionsTable', rows, [
     {label:'Casa', key:'houseNumber'}, {label:'Período', key:'period'}, {label:'Litros', key:'liters'}, {label:'Anomalía', render:r => r.isAnomalous ? '<span class="badge danger">Sí</span>' : '<span class="badge ok">No</span>'}, {label:'Observación', key:'observation'}
   ]);
+  renderConsumptionCalendar(rows, houseId);
 }
 
 async function loadPayments() {
@@ -368,7 +413,10 @@ bindForm('#cisternForm', '/cistern', 'POST', loadCistern);
 bindForm('#sensorForm', '/sensor', 'POST', loadCistern);
 bindForm('#houseForm', '/houses', 'POST', loadHouses);
 bindForm('#residentForm', '/residents', 'POST', loadHouses);
-bindForm('#consumptionForm', '/consumptions', 'POST', loadConsumptions);
+bindForm('#consumptionForm', '/consumptions', 'POST', () => {
+  const houseId = document.querySelector('#consumptionForm select[name="houseId"]').value;
+  return loadConsumptions(houseId);
+});
 bindForm('#paymentForm', '/payments', 'POST', loadPayments);
 bindForm('#distributionForm', '/distribution-plans', 'POST', loadDistribution);
 bindForm('#maintenanceForm', '/maintenance-orders', 'POST', loadMaintenance);
