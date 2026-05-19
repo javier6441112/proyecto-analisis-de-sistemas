@@ -1,0 +1,585 @@
+openapi: 3.0.0
+info:
+  title: API Comunidad Agua
+  description: Documentación OpenAPI de los endpoints REST del backend de gestión comunitaria de agua.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+    description: Servidor local
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    StandardError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    LoginRequest:
+      type: object
+      properties:
+        dpi:
+          type: string
+        password:
+          type: string
+      required:
+        - dpi
+        - password
+    RegisterRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        address:
+          type: string
+        dpi:
+          type: string
+        password:
+          type: string
+        confirmPassword:
+          type: string
+        role:
+          type: string
+          example: empleado
+      required:
+        - firstName
+        - lastName
+        - address
+        - dpi
+        - password
+        - confirmPassword
+    CisternPayload:
+      type: object
+      properties:
+        name:
+          type: string
+        capacityLiters:
+          type: number
+        currentLiters:
+          type: number
+        minThreshold:
+          type: number
+        maxThreshold:
+          type: number
+          nullable: true
+        observation:
+          type: string
+      required:
+        - capacityLiters
+        - currentLiters
+    SensorPayload:
+      type: object
+      properties:
+        liters:
+          type: number
+        observation:
+          type: string
+      required:
+        - liters
+    HousePayload:
+      type: object
+      properties:
+        houseNumber:
+          type: string
+        ownerName:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+      required:
+        - houseNumber
+        - ownerName
+    ResidentPayload:
+      type: object
+      properties:
+        houseId:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        isMinor:
+          type: boolean
+        identification:
+          type: string
+          nullable: true
+      required:
+        - houseId
+        - firstName
+        - lastName
+    MonthlyConsumptionPayload:
+      type: object
+      properties:
+        houseId:
+          type: integer
+        period:
+          type: string
+          example: 2026-05
+        liters:
+          type: number
+        observation:
+          type: string
+      required:
+        - houseId
+        - period
+        - liters
+    PaymentPayload:
+      type: object
+      properties:
+        houseId:
+          type: integer
+        period:
+          type: string
+        amount:
+          type: number
+        receiptNumber:
+          type: string
+      required:
+        - houseId
+        - period
+        - amount
+    DistributionPlanPayload:
+      type: object
+      properties:
+        serviceDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+          example: "08:00"
+        endTime:
+          type: string
+          example: "12:00"
+        notes:
+          type: string
+      required:
+        - serviceDate
+        - startTime
+        - endTime
+    MaintenanceOrderPayload:
+      type: object
+      properties:
+        orderDate:
+          type: string
+          format: date
+        maintenanceType:
+          type: string
+        description:
+          type: string
+        responsible:
+          type: string
+        observations:
+          type: string
+    MaintenanceInterventionPayload:
+      type: object
+      properties:
+        orderId:
+          type: integer
+        interventionType:
+          type: string
+        observations:
+          type: string
+        status:
+          type: string
+      required:
+        - orderId
+paths:
+  /auth/register:
+    post:
+      summary: Registrar nuevo usuario
+      requestBody:
+        description: Datos de registro de usuario
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuario registrado correctamente
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '409':
+          description: DPI ya registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /auth/login:
+    post:
+      summary: Iniciar sesión
+      requestBody:
+        description: Credenciales de acceso
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Token JWT generado
+        '400':
+          description: Falta DPI o contraseña
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '401':
+          description: Credenciales incorrectas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '404':
+          description: Usuario no registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /auth/me:
+    get:
+      summary: Obtener datos del usuario autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Información del usuario
+        '401':
+          description: No autenticado o token inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /health:
+    get:
+      summary: Estado de salud de la aplicación
+      responses:
+        '200':
+          description: Servicio activo
+  /dashboard:
+    get:
+      summary: Resumen del dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Datos del tablero
+        '401':
+          description: No autenticado
+  /cistern:
+    get:
+      summary: Obtener estado de la cisterna
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Datos de la cisterna
+    post:
+      summary: Crear o actualizar cisterna
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CisternPayload'
+      responses:
+        '200':
+          description: Cisterna actualizada
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /sensor:
+    post:
+      summary: Registrar lectura de sensor de cisterna
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorPayload'
+      responses:
+        '200':
+          description: Lectura recibida
+        '400':
+          description: Lectura inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /water-readings:
+    get:
+      summary: Listado de lecturas de agua
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de lecturas
+  /houses:
+    get:
+      summary: Listado de viviendas
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de viviendas
+    post:
+      summary: Crear vivienda
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HousePayload'
+      responses:
+        '201':
+          description: Vivienda creada
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '409':
+          description: Vivienda duplicada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /residents:
+    get:
+      summary: Listado de residentes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: houseId
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por vivienda
+      responses:
+        '200':
+          description: Lista de residentes
+    post:
+      summary: Crear residente
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResidentPayload'
+      responses:
+        '201':
+          description: Residente creado
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /consumptions:
+    get:
+      summary: Listado de consumos mensuales
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: houseId
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por vivienda
+      responses:
+        '200':
+          description: Lista de consumos
+    post:
+      summary: Registrar consumo mensual
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonthlyConsumptionPayload'
+      responses:
+        '201':
+          description: Consumo registrado
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '409':
+          description: Consumo duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /payments:
+    get:
+      summary: Listado de pagos
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de pagos
+    post:
+      summary: Registrar pago
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentPayload'
+      responses:
+        '201':
+          description: Pago registrado
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '409':
+          description: Pago duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /delinquency:
+    get:
+      summary: Obtener viviendas en morosidad
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          description: Lista de periodos a consultar
+      responses:
+        '200':
+          description: Lista de viviendas morosas
+  /distribution-plans:
+    get:
+      summary: Listado de planes de distribución
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de planes
+    post:
+      summary: Crear plan de distribución
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistributionPlanPayload'
+      responses:
+        '201':
+          description: Plan creado
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '409':
+          description: Horario traslapado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /maintenance-orders:
+    get:
+      summary: Listado de órdenes de mantenimiento
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de órdenes
+    post:
+      summary: Crear orden de mantenimiento
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaintenanceOrderPayload'
+      responses:
+        '201':
+          description: Orden creada
+  /maintenance-interventions:
+    post:
+      summary: Crear intervención de mantenimiento
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaintenanceInterventionPayload'
+      responses:
+        '201':
+          description: Intervención creada
+  /notifications:
+    get:
+      summary: Listado de notificaciones
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de notificaciones
+  /notifications/{notification_id}/read:
+    post:
+      summary: Marcar notificación como leída
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notificación marcada como leída
+        '404':
+          description: Notificación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
