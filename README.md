@@ -161,6 +161,77 @@ curl -X POST http://localhost:5000/api/sensor \
   -d '{"liters": 9500, "observation": "Lectura enviada por sensor"}'
 ```
 
+## Testing
+
+El proyecto incluye una suite completa de tests con **89% de coverage** que supera el objetivo del 80%.
+
+### Instalar dependencias de tests
+
+```bash
+pip install -r requirements-test.txt
+```
+
+### Ejecutar todos los tests
+
+```bash
+python -m pytest tests/ --cov=app --cov-report=html --cov-report=term
+```
+
+**Resultado esperado:** 77 tests pasando en ~10 segundos
+
+### Ejecutar tests específicos
+
+```bash
+# Solo tests de modelos
+python -m pytest tests/test_models.py -v
+
+# Solo tests de autenticación
+python -m pytest tests/test_auth.py -v
+
+# Solo tests de API
+python -m pytest tests/test_api.py -v
+
+# Un test individual
+python -m pytest tests/test_auth.py::TestAuthLogin::test_login_success -v
+```
+
+### Ver reporte de coverage
+
+Después de ejecutar los tests, abre el reporte HTML en el navegador:
+
+```bash
+# Windows PowerShell
+Start-Process htmlcov\index.html
+
+# Linux/Mac
+open htmlcov/index.html
+
+# O abre manualmente: htmlcov/index.html
+```
+
+### Cobertura por módulo
+
+- `app/routes/auth.py`: 99% ✅
+- `app/models.py`: 98% ✅
+- `app/routes/api.py`: 88% ✅
+- `app/extensions.py`: 100% ✅
+- **Total: 89%** 🎯
+
+### Tests incluidos (77 total)
+
+- **27 tests de modelos:** User, House, Resident, Cistern, WaterReading, MonthlyConsumption, Payment, DistributionPlan, MaintenanceOrder, Notification
+- **15 tests de autenticación:** Registro, login, bloqueo de cuenta, tokens JWT, autorización
+- **35 tests de API:** CRUD, validaciones, autorización por roles, manejo de errores
+
+### Características de testing
+
+✅ Base de datos mockeada con SQLite en memoria (sin dependencia de PostgreSQL)
+✅ Fixtures reutilizables (app, client, auth_user, auth_headers, etc.)
+✅ Validaciones completas de entrada y autorización
+✅ Detección de anomalías y manejo de errores (400, 401, 403, 404, 409)
+
+Para más detalles, consulta [TESTING.md](TESTING.md) o [TESTING_QUICK.md](TESTING_QUICK.md).
+
 ## Notas técnicas
 
 - El frontend es una sola vista renderizada por Flask y consume el backend usando `fetch`.
