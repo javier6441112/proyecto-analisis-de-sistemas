@@ -13,7 +13,7 @@ class User(TimestampMixin, db.Model):
     last_name = db.Column(db.String(80), nullable=False)
     address = db.Column(db.String(180), nullable=False)
     dpi = db.Column(db.String(20), unique=True, nullable=False, index=True)
-    role = db.Column(db.String(30), nullable=False, default="empleado")
+    role = db.Column(db.String(30), nullable=False, default="cliente")
     password_hash = db.Column(db.String(255), nullable=False)
     failed_attempts = db.Column(db.Integer, default=0, nullable=False)
     is_blocked = db.Column(db.Boolean, default=False, nullable=False)

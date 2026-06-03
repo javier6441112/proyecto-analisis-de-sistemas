@@ -5,6 +5,7 @@ from app.models import (
     House, Resident, Cistern, WaterReading, MonthlyConsumption,
     Payment, DistributionPlan, MaintenanceOrder, Notification
 )
+from app.routes.auth import create_token
 
 
 class TestHealthEndpoint:
@@ -15,6 +16,38 @@ class TestHealthEndpoint:
         response = client.get('/api/health')
         assert response.status_code == 200
         assert response.get_json()['status'] == 'ok'
+
+
+class TestUserAdministration:
+    """Test administrator-only user management."""
+
+    def test_admin_can_create_user_with_role(self, client, auth_headers):
+        response = client.post('/api/users', headers=auth_headers, json={
+            'firstName': 'Support',
+            'lastName': 'User',
+            'address': 'Sector 3',
+            'dpi': '9999999999997',
+            'role': 'soporte',
+            'password': 'SecurePass123*',
+            'confirmPassword': 'SecurePass123*'
+        })
+        assert response.status_code == 201
+        data = response.get_json()
+        assert data['user']['dpi'] == '9999999999997'
+        assert data['user']['role'] == 'soporte'
+
+    def test_non_admin_cannot_create_user_with_role(self, client, empleado_user):
+        token = create_token(empleado_user)
+        response = client.post('/api/users', headers={'Authorization': f'Bearer {token}'}, json={
+            'firstName': 'Support',
+            'lastName': 'User',
+            'address': 'Sector 3',
+            'dpi': '9999999999996',
+            'role': 'soporte',
+            'password': 'SecurePass123*',
+            'confirmPassword': 'SecurePass123*'
+        })
+        assert response.status_code == 403
 
 
 class TestDashboard:
