@@ -29,13 +29,6 @@ services:
       - traefik.http.routers.agua.tls=true
       - traefik.http.routers.agua.tls.certresolver=letsencrypt
       - traefik.http.services.agua.loadbalancer.server.port=5000
-    networks:
-      - default
-      - traefik-proxy
 
 volumes:
   postgres_data:
-
-networks:
-  traefik-proxy:
-    external: true
