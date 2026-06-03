@@ -8,6 +8,8 @@ from ..models import User
 
 auth_bp = Blueprint("auth", __name__)
 
+VALID_ROLES = {"administrador", "empleado", "soporte", "cliente"}
+
 
 def create_token(user: User):
     payload = {
@@ -73,7 +75,7 @@ def register():
         last_name=data["lastName"].strip(),
         address=data["address"].strip(),
         dpi=data["dpi"].strip(),
-        role=data.get("role", "empleado"),
+        role="cliente",
     )
     user.set_password(data["password"])
     db.session.add(user)

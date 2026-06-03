@@ -5,9 +5,9 @@ from sqlalchemy.exc import IntegrityError
 from ..extensions import db
 from ..models import (
     Cistern, DistributionPlan, House, MaintenanceIntervention, MaintenanceOrder,
-    MonthlyConsumption, Notification, Payment, Resident, WaterReading
+    MonthlyConsumption, Notification, Payment, Resident, User, WaterReading
 )
-from .auth import login_required, roles_required
+from .auth import VALID_ROLES, login_required, roles_required
 
 api_bp = Blueprint("api", __name__)
 
@@ -39,6 +39,46 @@ def detect_anomaly(house_id, liters):
 @api_bp.get("/health")
 def health():
     return jsonify({"status": "ok"})
+
+
+@api_bp.get("/users")
+@roles_required("administrador")
+def list_users():
+    users = User.query.order_by(User.created_at.desc()).all()
+    return jsonify([user.to_dict() for user in users])
+
+
+@api_bp.post("/users")
+@roles_required("administrador")
+def create_user():
+    data = body()
+    required = ["firstName", "lastName", "address", "dpi", "role", "password", "confirmPassword"]
+    if any(not str(data.get(field, "")).strip() for field in required):
+        return jsonify({"error": "Todos los campos obligatorios deben completarse"}), 400
+    if data["password"] != data["confirmPassword"]:
+        return jsonify({"error": "Las contraseñas no coinciden"}), 400
+    if len(data["password"]) < 8:
+        return jsonify({"error": "La contraseña debe tener al menos 8 caracteres"}), 400
+
+    role = data["role"].strip()
+    if role not in VALID_ROLES:
+        return jsonify({"error": "Rol inválido"}), 400
+
+    user = User(
+        first_name=data["firstName"].strip(),
+        last_name=data["lastName"].strip(),
+        address=data["address"].strip(),
+        dpi=data["dpi"].strip(),
+        role=role,
+    )
+    user.set_password(data["password"])
+    db.session.add(user)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "El DPI ya está registrado"}), 409
+    return jsonify({"message": "Usuario creado correctamente", "user": user.to_dict()}), 201
 
 
 @api_bp.get("/dashboard")

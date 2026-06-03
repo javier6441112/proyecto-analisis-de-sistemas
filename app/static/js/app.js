@@ -112,7 +112,7 @@ function applyRoleAccess() {
     cliente: ['distribucion', 'mantenimiento', 'notificaciones'],
     empleado: ['dashboard', 'viviendas', 'pagos', 'notificaciones'],
     soporte: ['dashboard', 'mantenimiento', 'notificaciones'],
-    administrador: ['dashboard', 'agua', 'viviendas', 'consumos', 'pagos', 'distribucion', 'mantenimiento', 'notificaciones'],
+    administrador: ['dashboard', 'agua', 'viviendas', 'consumos', 'pagos', 'distribucion', 'mantenimiento', 'notificaciones', 'usuarios'],
   };
   const hiddenFormsByRole = {
     cliente: '#distributionForm, #maintenanceForm, #interventionForm, #cisternForm, #sensorForm, #houseForm, #residentForm, #consumptionForm, #paymentForm',
@@ -287,6 +287,17 @@ async function loadNotifications() {
   $('#notificationsList').innerHTML = renderNotifications(rows, { hideRead: true, showMarkRead: state.user?.role !== 'cliente' });
 }
 
+async function loadUsers() {
+  const rows = await api('/users');
+  renderTable('#usersTable', rows, [
+    {label:'Nombre', render:u => `${u.firstName} ${u.lastName}`},
+    {label:'DPI', key:'dpi'},
+    {label:'Dirección', key:'address'},
+    {label:'Rol', render:u => `<span class="badge">${u.role}</span>`},
+    {label:'Estado', render:u => u.isBlocked ? '<span class="badge danger">Bloqueado</span>' : '<span class="badge ok">Activo</span>'}
+  ]);
+}
+
 async function markNotificationAsRead(notificationId) {
   await api(`/notifications/${notificationId}/read`, { method: 'POST' });
   await Promise.all([loadNotifications(), loadDashboard()]);
@@ -303,7 +314,7 @@ async function loadAll() {
     } else if (role === 'empleado') {
       tasks.push(loadDashboard(), loadHouses(), loadPayments());
     } else {
-      tasks.push(loadDashboard(), loadCistern(), loadHouses(), loadConsumptions(), loadPayments(), loadDistribution(), loadMaintenance());
+      tasks.push(loadDashboard(), loadCistern(), loadHouses(), loadConsumptions(), loadPayments(), loadDistribution(), loadMaintenance(), loadUsers());
     }
     await Promise.all(tasks);
   } catch (err) {
@@ -421,5 +432,6 @@ bindForm('#paymentForm', '/payments', 'POST', loadPayments);
 bindForm('#distributionForm', '/distribution-plans', 'POST', loadDistribution);
 bindForm('#maintenanceForm', '/maintenance-orders', 'POST', loadMaintenance);
 bindForm('#interventionForm', '/maintenance-interventions', 'POST', loadMaintenance);
+bindForm('#userForm', '/users', 'POST', loadUsers);
 
 setAuthVisible();

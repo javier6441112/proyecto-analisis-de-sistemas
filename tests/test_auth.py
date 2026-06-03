@@ -20,6 +20,22 @@ class TestAuthRegister:
         data = response.get_json()
         assert data['message'] == 'Usuario registrado correctamente'
         assert data['user']['dpi'] == '9999999999999'
+        assert data['user']['role'] == 'cliente'
+
+    def test_register_ignores_requested_role(self, client):
+        """Test public registration always creates cliente users."""
+        response = client.post('/api/auth/register', json={
+            'firstName': 'New',
+            'lastName': 'Admin',
+            'address': '123 Test St',
+            'dpi': '9999999999998',
+            'role': 'administrador',
+            'password': 'SecurePass123*',
+            'confirmPassword': 'SecurePass123*'
+        })
+        assert response.status_code == 201
+        data = response.get_json()
+        assert data['user']['role'] == 'cliente'
     
     def test_register_missing_fields(self, client):
         """Test registration with missing fields."""
