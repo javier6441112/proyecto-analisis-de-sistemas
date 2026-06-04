@@ -1,4 +1,4 @@
-const state = { token: localStorage.getItem('token'), user: JSON.parse(localStorage.getItem('user') || 'null'), activeView: 'dashboard' };
+﻿const state = { token: localStorage.getItem('token'), user: JSON.parse(localStorage.getItem('user') || 'null'), activeView: 'dashboard' };
 const PAGE_SIZE = 5;
 const tableStates = {};
 const $ = (selector) => document.querySelector(selector);
@@ -392,32 +392,6 @@ $('#loginForm').addEventListener('submit', async (e) => {
     setAuthVisible();
   } catch (err) { toast(err.message, true); }
 });
-
-$('#registerForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const form = e.currentTarget;
-
-  try {
-    await api('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(formData(form))
-    });
-
-    toast('Usuario creado. Ahora puede iniciar sesión.');
-    form.reset();
-
-  } catch (err) {
-    toast(err.message, true);
-  }
-});
-
-$$('.tab').forEach(btn => btn.addEventListener('click', () => {
-  $$('.tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  $('#loginForm').classList.toggle('hidden', btn.dataset.authTab !== 'login');
-  $('#registerForm').classList.toggle('hidden', btn.dataset.authTab !== 'register');
-}));
 
 $$('.nav-btn').forEach(btn => btn.addEventListener('click', () => {
   $$('.nav-btn').forEach(b => b.classList.remove('active'));

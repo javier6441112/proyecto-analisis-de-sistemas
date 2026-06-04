@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -50,30 +50,12 @@
             <small>Acceso al sistema</small>
           </div>
         </div>
-        <div class="tabs">
-          <button class="tab active" data-auth-tab="login">Login</button>
-          <button class="tab" data-auth-tab="register">Registro</button>
-        </div>
         <form id="loginForm" class="form stack">
           <h2>Iniciar sesión</h2>
           <label>DPI<input name="dpi" value="1234567890101" required /></label>
           <label>Contraseña<input name="password" type="password" value="Admin123*" required /></label>
           <button type="submit">Entrar</button>
           <small>Usuario demo: 1234567890101 / Admin123*</small>
-        </form>
-        <form id="registerForm" class="form stack hidden">
-          <h2>Registrar usuario</h2>
-          <div class="grid two">
-            <label>Nombre<input name="firstName" required /></label>
-            <label>Apellido<input name="lastName" required /></label>
-          </div>
-          <label>Dirección<input name="address" required /></label>
-          <label>DPI<input name="dpi" required /></label>
-          <div class="grid two">
-            <label>Contraseña<input name="password" type="password" required /></label>
-            <label>Confirmar<input name="confirmPassword" type="password" required /></label>
-          </div>
-          <button type="submit">Crear cuenta</button>
         </form>
       </div>
     </section>
