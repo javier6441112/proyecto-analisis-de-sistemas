@@ -1,57 +1,111 @@
-# Sistema Comunitario de Gestión y Control del Agua
+# Sistema Comunitario de Gestion y Control del Agua
 
-Aplicación web de primer release para el proyecto de gestión del agua comunitaria. Incluye backend en **Python + Flask**, base de datos **PostgreSQL** y frontend en **HTML/CSS/JavaScript vanilla** consumiendo endpoints REST.
+Aplicacion web para administrar el abastecimiento de agua en una comunidad. El proyecto integra un backend REST con **Python, Flask y SQLAlchemy**, una base de datos **PostgreSQL** y una interfaz web de una sola vista construida con **HTML, CSS y JavaScript vanilla**.
 
-## Módulos incluidos
+El sistema permite registrar usuarios, viviendas, habitantes, lecturas de cisterna, consumos mensuales, pagos, planes de distribucion, mantenimiento y notificaciones operativas.
 
-- Autenticación con registro, login, hash de contraseña, JWT y bloqueo por intentos fallidos.
-- Dashboard general con nivel de agua, viviendas, habitantes, consumo, pagos, mantenimiento y notificaciones.
-- Agua almacenada: configuración de cisterna, edición manual, umbrales y endpoint de sensor.
-- Gasto mensual por vivienda: registro, historial y detección simple de consumo anómalo.
-- Censo por vivienda: viviendas y habitantes.
-- Pagos de mantenimiento: registro por período y consulta de morosidad.
-- Distribución semanal: calendarización con validación de traslapes.
-- Mantenimiento: órdenes e intervenciones técnicas.
+## Caracteristicas principales
+
+- Autenticacion con registro, inicio de sesion, hash de contrasenas, JWT y bloqueo de cuenta tras intentos fallidos.
+- Control de acceso por roles: `administrador`, `empleado`, `soporte` y `cliente`.
+- Dashboard con nivel de agua, viviendas, habitantes, consumo, pagos, mantenimiento, distribucion y notificaciones.
+- Gestion de cisterna con capacidad, nivel actual, umbrales minimo/maximo y lecturas manuales o por sensor.
+- Registro mensual de consumo por vivienda con deteccion simple de consumos anomalos.
+- Censo comunitario mediante viviendas y residentes.
+- Registro de pagos por periodo y consulta de morosidad.
+- Calendarizacion semanal de distribucion con validacion de traslapes.
+- Ordenes de mantenimiento e intervenciones tecnicas.
 - Notificaciones generadas por eventos del sistema.
+- Especificacion OpenAPI disponible en `openapi.yml`.
+- Suite de pruebas automatizadas con `pytest` y reporte de cobertura.
 
-## Estructura
+## Tecnologias
+
+- Python 3
+- Flask 3
+- Flask-SQLAlchemy
+- Flask-Migrate
+- Flask-Cors
+- PostgreSQL
+- PyJWT
+- Docker y Docker Compose
+- Pytest y pytest-cov
+
+## Estructura del proyecto
 
 ```text
-comunidad_agua_app/
-├── app/
-│   ├── routes/
-│   │   ├── api.py
-│   │   └── auth.py
-│   ├── static/
-│   │   ├── css/styles.css
-│   │   └── js/app.js
-│   ├── templates/index.html
-│   ├── extensions.py
-│   ├── models.py
-│   └── __init__.py
-├── docker-compose.yml
-├── Dockerfile
-├── requirements.txt
-├── run.py
-├── .env.example
-└── README.md
+proyecto-analisis-de-sistemas/
+|-- app/
+|   |-- factories/
+|   |   `-- model_factory.py
+|   |-- repositories/
+|   |   |-- cistern_repository.py
+|   |   |-- consumption_repository.py
+|   |   |-- distribution_repository.py
+|   |   |-- house_repository.py
+|   |   |-- maintenance_repository.py
+|   |   |-- notification_repository.py
+|   |   |-- payment_repository.py
+|   |   |-- resident_repository.py
+|   |   |-- user_repository.py
+|   |   `-- water_reading_repository.py
+|   |-- routes/
+|   |   |-- api.py
+|   |   `-- auth.py
+|   |-- static/
+|   |   |-- css/styles.css
+|   |   |-- img/
+|   |   `-- js/app.js
+|   |-- templates/index.html
+|   |-- extensions.py
+|   |-- models.py
+|   `-- __init__.py
+|-- tests/
+|   |-- conftest.py
+|   |-- test_api.py
+|   |-- test_auth.py
+|   `-- test_models.py
+|-- docker-compose.yml
+|-- Dockerfile
+|-- openapi.yml
+|-- pytest.ini
+|-- requirements.txt
+|-- requirements-test.txt
+|-- run.py
+|-- schema.sql
+|-- TESTING.md
+|-- TESTING_QUICK.md
+`-- README.md
 ```
 
-## Ejecución rápida con Docker
+## Variables de entorno
 
-1. Levantar PostgreSQL y Flask:
+Crea un archivo `.env` a partir de `.env.example` si ejecutas el proyecto sin Docker.
+
+```env
+FLASK_ENV=development
+SECRET_KEY=cambia-esta-clave
+JWT_SECRET=cambia-esta-clave-jwt
+DATABASE_URL=postgresql+psycopg2://agua_user:agua_pass@localhost:5432/agua_db
+```
+
+En Docker Compose, estas variables ya estan definidas para que el servicio `web` se conecte al contenedor `db`.
+
+## Ejecucion con Docker
+
+1. Construir y levantar los servicios:
 
 ```bash
 docker compose up -d --build
 ```
 
-2. Inicializar tablas y datos demo:
+2. Crear tablas y cargar datos demo:
 
 ```bash
 docker compose exec web flask init-db
 ```
 
-3. Abrir la aplicación:
+3. Abrir la aplicacion:
 
 ```text
 http://localhost:5000
@@ -61,17 +115,28 @@ Usuario demo:
 
 ```text
 DPI: 1234567890101
-Contraseña: Admin123*
+Contrasena: Admin123*
+Rol: administrador
 ```
 
-## Ejecución local sin Docker
+## Ejecucion local
 
-1. Crear entorno virtual:
+1. Crear y activar un entorno virtual:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # Linux/Mac
-# .venv\Scripts\activate    # Windows
+```
+
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
 ```
 
 2. Instalar dependencias:
@@ -80,33 +145,62 @@ source .venv/bin/activate   # Linux/Mac
 pip install -r requirements.txt
 ```
 
-3. Crear archivo `.env` desde el ejemplo:
+3. Crear el archivo `.env`:
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Linux/macOS:
 
 ```bash
 cp .env.example .env
 ```
 
-4. Asegurar que PostgreSQL esté levantado y que exista la base de datos configurada en `DATABASE_URL`.
+4. Verificar que PostgreSQL este activo y que exista la base de datos indicada en `DATABASE_URL`.
 
-5. Inicializar la base de datos:
+5. Inicializar tablas y datos demo:
 
 ```bash
 flask --app run.py init-db
 ```
 
-6. Ejecutar:
+6. Ejecutar la aplicacion:
 
 ```bash
 python run.py
 ```
 
-## Endpoints principales
+La aplicacion quedara disponible en:
 
-### Auth
+```text
+http://localhost:5000
+```
+
+## API REST
+
+Los endpoints protegidos requieren el header:
+
+```text
+Authorization: Bearer <token>
+```
+
+### Salud
+
+- `GET /api/health`
+
+### Autenticacion
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
+
+### Usuarios
+
+- `GET /api/users`
+- `POST /api/users`
 
 ### Dashboard
 
@@ -131,13 +225,13 @@ python run.py
 - `GET /api/consumptions`
 - `POST /api/consumptions`
 
-### Pagos
+### Pagos y morosidad
 
 - `GET /api/payments`
 - `POST /api/payments`
 - `GET /api/delinquency?period=2026-03&period=2026-04`
 
-### Distribución
+### Distribucion
 
 - `GET /api/distribution-plans`
 - `POST /api/distribution-plans`
@@ -153,7 +247,19 @@ python run.py
 - `GET /api/notifications`
 - `POST /api/notifications/<id>/read`
 
-## Ejemplo de lectura de sensor
+La especificacion completa puede consultarse en `openapi.yml`.
+
+## Ejemplos de uso
+
+Iniciar sesion:
+
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"dpi": "1234567890101", "password": "Admin123*"}'
+```
+
+Enviar una lectura de sensor:
 
 ```bash
 curl -X POST http://localhost:5000/api/sensor \
@@ -161,79 +267,93 @@ curl -X POST http://localhost:5000/api/sensor \
   -d '{"liters": 9500, "observation": "Lectura enviada por sensor"}'
 ```
 
-## Testing
+Consultar dashboard con token:
 
-El proyecto incluye una suite completa de tests con **89% de coverage** que supera el objetivo del 80%.
+```bash
+curl http://localhost:5000/api/dashboard \
+  -H "Authorization: Bearer <token>"
+```
 
-### Instalar dependencias de tests
+## Pruebas
+
+El proyecto incluye pruebas unitarias y de API con una base SQLite en memoria para evitar depender de PostgreSQL durante la ejecucion de tests.
+
+Instalar dependencias de pruebas:
 
 ```bash
 pip install -r requirements-test.txt
 ```
 
-### Ejecutar todos los tests
+Ejecutar toda la suite:
+
+```bash
+python -m pytest
+```
+
+Ejecutar con cobertura:
 
 ```bash
 python -m pytest tests/ --cov=app --cov-report=html --cov-report=term
 ```
 
-**Resultado esperado:** 77 tests pasando en ~10 segundos
-
-### Ejecutar tests específicos
+Ejecutar archivos especificos:
 
 ```bash
-# Solo tests de modelos
 python -m pytest tests/test_models.py -v
-
-# Solo tests de autenticación
 python -m pytest tests/test_auth.py -v
-
-# Solo tests de API
 python -m pytest tests/test_api.py -v
-
-# Un test individual
-python -m pytest tests/test_auth.py::TestAuthLogin::test_login_success -v
 ```
 
-### Ver reporte de coverage
+Ver el reporte HTML de cobertura:
 
-Después de ejecutar los tests, abre el reporte HTML en el navegador:
+Windows PowerShell:
+
+```powershell
+Start-Process htmlcov\index.html
+```
+
+Linux/macOS:
 
 ```bash
-# Windows PowerShell
-Start-Process htmlcov\index.html
-
-# Linux/Mac
 open htmlcov/index.html
-
-# O abre manualmente: htmlcov/index.html
 ```
 
-### Cobertura por módulo
+Mas informacion de pruebas:
 
-- `app/routes/auth.py`: 99% ✅
-- `app/models.py`: 98% ✅
-- `app/routes/api.py`: 88% ✅
-- `app/extensions.py`: 100% ✅
-- **Total: 89%** 🎯
+- `TESTING.md`
+- `TESTING_QUICK.md`
+- `RESULTADO_TESTS.txt`
 
-### Tests incluidos (77 total)
+## Comandos utiles
 
-- **27 tests de modelos:** User, House, Resident, Cistern, WaterReading, MonthlyConsumption, Payment, DistributionPlan, MaintenanceOrder, Notification
-- **15 tests de autenticación:** Registro, login, bloqueo de cuenta, tokens JWT, autorización
-- **35 tests de API:** CRUD, validaciones, autorización por roles, manejo de errores
+Reiniciar la base de datos demo en Docker:
 
-### Características de testing
+```bash
+docker compose exec web flask init-db
+```
 
-✅ Base de datos mockeada con SQLite en memoria (sin dependencia de PostgreSQL)
-✅ Fixtures reutilizables (app, client, auth_user, auth_headers, etc.)
-✅ Validaciones completas de entrada y autorización
-✅ Detección de anomalías y manejo de errores (400, 401, 403, 404, 409)
+Ver logs de la aplicacion:
 
-Para más detalles, consulta [TESTING.md](TESTING.md) o [TESTING_QUICK.md](TESTING_QUICK.md).
+```bash
+docker compose logs -f web
+```
 
-## Notas técnicas
+Detener servicios Docker:
 
-- El frontend es una sola vista renderizada por Flask y consume el backend usando `fetch`.
-- El token JWT se guarda en `localStorage` para simplificar el release académico.
-- Para producción real se recomienda HTTPS obligatorio, expiración corta de token, refresh token seguro, cookies `HttpOnly`, respaldos automáticos y migraciones controladas.
+```bash
+docker compose down
+```
+
+Detener servicios y eliminar el volumen de PostgreSQL:
+
+```bash
+docker compose down -v
+```
+
+## Notas tecnicas
+
+- La aplicacion Flask se crea con el patron `create_app()` en `app/__init__.py`.
+- El frontend se sirve desde `app/templates/index.html` y consume la API usando `fetch`.
+- El token JWT se guarda en `localStorage` para simplificar el release academico.
+- La ruta `/api/sensor` no exige autenticacion para facilitar la integracion con dispositivos externos.
+- Para un entorno productivo se recomienda HTTPS obligatorio, secretos seguros, expiracion corta de tokens, cookies `HttpOnly`, respaldos automaticos, migraciones controladas y monitoreo de logs.
