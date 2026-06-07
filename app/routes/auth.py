@@ -4,9 +4,13 @@ import jwt
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from ..extensions import db
+from ..factories import ModelFactory
 from ..models import User
+from ..repositories import UserRepository
 
 auth_bp = Blueprint("auth", __name__)
+
+VALID_ROLES = {"administrador", "empleado", "soporte", "cliente"}
 
 
 def create_token(user: User):
@@ -68,14 +72,7 @@ def register():
         return jsonify({"error": "Las contraseñas no coinciden"}), 400
     if len(data["password"]) < 8:
         return jsonify({"error": "La contraseña debe tener al menos 8 caracteres"}), 400
-    user = User(
-        first_name=data["firstName"].strip(),
-        last_name=data["lastName"].strip(),
-        address=data["address"].strip(),
-        dpi=data["dpi"].strip(),
-        role=data.get("role", "empleado"),
-    )
-    user.set_password(data["password"])
+    user = ModelFactory.user(data, role="cliente")
     db.session.add(user)
     try:
         db.session.commit()
@@ -92,7 +89,7 @@ def login():
     password = str(data.get("password", ""))
     if not dpi or not password:
         return jsonify({"error": "DPI y contraseña son obligatorios"}), 400
-    user = User.query.filter_by(dpi=dpi).first()
+    user = UserRepository().find_by_dpi(dpi)
     if not user:
         return jsonify({"error": "Usuario no registrado"}), 404
     if user.is_blocked:

@@ -3,6 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sistema para monitoreo de cisterna, consumo mensual, pagos, censo, mantenimiento y notificaciones de una comunidad rural." />
+  <meta name="theme-color" content="#0f766e" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="es_GT" />
+  <meta property="og:site_name" content="Sistema Comunitario de Agua" />
+  <meta property="og:title" content="Sistema Comunitario de Agua" />
+  <meta property="og:description" content="Monitoreo de cisterna, consumo mensual, pagos, censo, mantenimiento y notificaciones para una comunidad rural." />
+  <meta property="og:url" content="{{ request.base_url }}" />
+  <meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='img/social-preview.png') }}" />
+  <meta property="og:image:secure_url" content="{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='img/social-preview.png') }}" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1730" />
+  <meta property="og:image:height" content="909" />
+  <meta property="og:image:alt" content="Vista previa del Sistema Comunitario de Agua" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Sistema Comunitario de Agua" />
+  <meta name="twitter:description" content="Monitoreo de cisterna, consumo mensual, pagos, censo, mantenimiento y notificaciones para una comunidad rural." />
+  <meta name="twitter:image" content="{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='img/social-preview.png') }}" />
+  <meta name="twitter:image:alt" content="Vista previa del Sistema Comunitario de Agua" />
+
   <title>Sistema Comunitario de Agua</title>
   <link rel="stylesheet" href="/static/css/styles.css" />
 </head>
@@ -10,11 +32,24 @@
   <main id="app">
     <section id="authView" class="auth-layout">
       <div class="brand-panel">
-        <span class="pill">Proyecto III · Release 1</span>
-        <h1>Sistema de Gestión y Control del Agua</h1>
-        <p>Monitoreo de cisterna, consumo mensual, pagos, censo, mantenimiento y notificaciones para una comunidad rural.</p>
+        <div class="brand-copy">
+          <h1>Sistema de Gestión y Control del Agua</h1>
+          <p>Monitoreo de cisterna, consumo mensual, pagos, censo, mantenimiento y notificaciones para una comunidad rural.</p>
+          <div class="auth-highlights" aria-label="Módulos principales">
+            <span>≋ Cisterna</span>
+            <span>⌂ Censo</span>
+            <span>Q Pagos</span>
+          </div>
+        </div>
       </div>
       <div class="auth-card">
+        <div class="auth-card-header">
+          <span class="auth-logo">≋</span>
+          <div>
+            <strong>Agua Comunitaria</strong>
+            <small>Acceso al sistema</small>
+          </div>
+        </div>
         <div class="tabs">
           <button class="tab active" data-auth-tab="login">Login</button>
           <button class="tab" data-auth-tab="register">Registro</button>
@@ -34,14 +69,6 @@
           </div>
           <label>Dirección<input name="address" required /></label>
           <label>DPI<input name="dpi" required /></label>
-          <label>Rol
-            <select name="role">
-              <option value="empleado">Empleado</option>
-              <option value="administrador">Administrador</option>
-              <option value="soporte">Soporte</option>
-              <option value="cliente">Cliente</option>
-            </select>
-          </label>
           <div class="grid two">
             <label>Contraseña<input name="password" type="password" required /></label>
             <label>Confirmar<input name="confirmPassword" type="password" required /></label>
@@ -56,14 +83,15 @@
         <h2>Agua Comunitaria</h2>
         <p id="userLabel"></p>
         <nav>
-          <button class="nav-btn active" data-view="dashboard">Dashboard</button>
-          <button class="nav-btn" data-view="agua">Agua almacenada</button>
-          <button class="nav-btn" data-view="viviendas">Viviendas y censo</button>
-          <button class="nav-btn" data-view="consumos">Consumo mensual</button>
-          <button class="nav-btn" data-view="pagos">Pagos</button>
-          <button class="nav-btn" data-view="distribucion">Distribución</button>
-          <button class="nav-btn" data-view="mantenimiento">Mantenimiento</button>
-          <button class="nav-btn" data-view="notificaciones">Notificaciones</button>
+          <button class="nav-btn active" data-view="dashboard" data-icon="▦">Dashboard</button>
+          <button class="nav-btn" data-view="agua" data-icon="≋">Agua almacenada</button>
+          <button class="nav-btn" data-view="viviendas" data-icon="⌂">Viviendas y censo</button>
+          <button class="nav-btn" data-view="consumos" data-icon="◷">Consumo mensual</button>
+          <button class="nav-btn" data-view="pagos" data-icon="Q">Pagos</button>
+          <button class="nav-btn" data-view="distribucion" data-icon="◇">Distribución</button>
+          <button class="nav-btn" data-view="mantenimiento" data-icon="⚙">Mantenimiento</button>
+          <button class="nav-btn" data-view="notificaciones" data-icon="!">Notificaciones</button>
+          <button class="nav-btn" data-view="usuarios" data-icon="+">Usuarios</button>
         </nav>
         <button id="logoutBtn" class="ghost">Cerrar sesión</button>
       </aside>
@@ -232,6 +260,28 @@
 
         <section id="notificaciones" class="view-section hidden">
           <div class="card"><h2>Notificaciones</h2><div id="notificationsList"></div></div>
+        </section>
+
+        <section id="usuarios" class="view-section hidden">
+          <div class="card">
+            <h2>Crear usuario</h2>
+            <form id="userForm" class="grid four form-inline">
+              <input name="firstName" placeholder="Nombre" required />
+              <input name="lastName" placeholder="Apellido" required />
+              <input name="address" placeholder="Dirección" required />
+              <input name="dpi" placeholder="DPI" required />
+              <select name="role" required>
+                <option value="cliente">Cliente</option>
+                <option value="empleado">Empleado</option>
+                <option value="soporte">Soporte</option>
+                <option value="administrador">Administrador</option>
+              </select>
+              <input name="password" type="password" placeholder="Contraseña" required />
+              <input name="confirmPassword" type="password" placeholder="Confirmar contraseña" required />
+              <button type="submit">Crear usuario</button>
+            </form>
+          </div>
+          <div class="card"><h2>Usuarios registrados</h2><div id="usersTable"></div></div>
         </section>
       </section>
     </section>

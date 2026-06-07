@@ -7,10 +7,9 @@ services:
       POSTGRES_DB: agua_db
       POSTGRES_USER: agua_user
       POSTGRES_PASSWORD: agua_pass
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
   web:
     build: .
     container_name: agua_flask
@@ -23,5 +22,13 @@ services:
       - "5000:5000"
     depends_on:
       - db
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.agua.rule=Host(`analisissistemas2026proyecto.xyz`)
+      - traefik.http.routers.agua.entrypoints=websecure
+      - traefik.http.routers.agua.tls=true
+      - traefik.http.routers.agua.tls.certresolver=letsencrypt
+      - traefik.http.services.agua.loadbalancer.server.port=5000
+
 volumes:
   postgres_data:

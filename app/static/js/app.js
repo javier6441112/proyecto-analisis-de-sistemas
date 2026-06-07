@@ -3,6 +3,41 @@ const PAGE_SIZE = 5;
 const tableStates = {};
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
+const viewMeta = {
+  dashboard: { icon: '▦', title: 'Dashboard', text: 'Resumen operativo del sistema comunitario de agua.' },
+  agua: { icon: '≋', title: 'Agua almacenada', text: 'Control visual de cisterna, lecturas y umbrales de abastecimiento.' },
+  viviendas: { icon: '⌂', title: 'Viviendas y censo', text: 'Registro de casas, propietarios y habitantes de la comunidad.' },
+  consumos: { icon: '◷', title: 'Consumo mensual', text: 'Seguimiento por período para detectar patrones y consumos anómalos.' },
+  pagos: { icon: 'Q', title: 'Pagos', text: 'Control de cuotas, recibos y morosidad por vivienda.' },
+  distribucion: { icon: '◇', title: 'Distribución', text: 'Planificación semanal de horarios para el servicio de agua.' },
+  mantenimiento: { icon: '⚙', title: 'Mantenimiento', text: 'Órdenes, responsables e intervenciones técnicas.' },
+  notificaciones: { icon: '!', title: 'Notificaciones', text: 'Alertas relevantes para el rol activo.' },
+  usuarios: { icon: '+', title: 'Usuarios', text: 'Creación de cuentas y asignación de roles desde administración.' },
+};
+
+function viewHero(viewId) {
+  const meta = viewMeta[viewId];
+  if (!meta) return '';
+  return `
+    <div class="view-hero">
+      <div class="view-hero-copy">
+        <span class="screen-icon">${meta.icon}</span>
+        <div>
+          <h1>${meta.title}</h1>
+          <p>${meta.text}</p>
+        </div>
+      </div>
+      <img src="/static/img/dashboard-water.png" alt="" />
+    </div>`;
+}
+
+function decorateViewHeaders() {
+  Object.keys(viewMeta).forEach((viewId) => {
+    const section = $(`#${viewId}`);
+    if (!section || section.querySelector('.view-hero')) return;
+    section.insertAdjacentHTML('afterbegin', viewHero(viewId));
+  });
+}
 
 function toast(message, isError = false) {
   const box = $('#toast');
@@ -112,7 +147,7 @@ function applyRoleAccess() {
     cliente: ['distribucion', 'mantenimiento', 'notificaciones'],
     empleado: ['dashboard', 'viviendas', 'pagos', 'notificaciones'],
     soporte: ['dashboard', 'mantenimiento', 'notificaciones'],
-    administrador: ['dashboard', 'agua', 'viviendas', 'consumos', 'pagos', 'distribucion', 'mantenimiento', 'notificaciones'],
+    administrador: ['dashboard', 'agua', 'viviendas', 'consumos', 'pagos', 'distribucion', 'mantenimiento', 'notificaciones', 'usuarios'],
   };
   const hiddenFormsByRole = {
     cliente: '#distributionForm, #maintenanceForm, #interventionForm, #cisternForm, #sensorForm, #houseForm, #residentForm, #consumptionForm, #paymentForm',
@@ -180,15 +215,16 @@ async function loadDashboard() {
   const data = await api('/dashboard');
   const c = data.cistern || { percentage: 0, currentLiters: 0, capacityLiters: 0 };
   $('#dashboard').innerHTML = `
+    ${viewHero('dashboard')}
     <div class="cards">
-      <div class="metric"><span>Nivel actual</span><strong>${Number(c.currentLiters || 0).toLocaleString()} L</strong><div class="water-bar"><div class="water-fill" style="width:${Math.min(c.percentage || 0, 100)}%"></div></div><small>${c.percentage || 0}% de capacidad</small></div>
-      <div class="metric"><span>Viviendas</span><strong>${data.houses}</strong><small>${data.residents} habitantes censados</small></div>
-      <div class="metric"><span>Consumo registrado</span><strong>${Number(data.monthlyConsumptionLiters).toLocaleString()} L</strong><small>Histórico mensual</small></div>
-      <div class="metric"><span>Días estimados</span><strong>${data.estimatedDaysRemaining ?? 'N/D'}</strong><small>Según consumo promedio</small></div>
-      <div class="metric"><span>Pagos</span><strong>Q ${Number(data.paymentsTotal).toFixed(2)}</strong><small>Total registrado</small></div>
-      <div class="metric"><span>Mantenimientos</span><strong>${data.pendingMaintenance}</strong><small>Órdenes pendientes</small></div>
-      <div class="metric"><span>Notificaciones</span><strong>${data.unreadNotifications}</strong><small>No leídas</small></div>
-      <div class="metric"><span>Consumo diario</span><strong>${Number(data.dailyConsumptionLiters || 0).toLocaleString()} L</strong><small>Con lecturas sucesivas</small></div>
+      <div class="metric"><span><b class="metric-icon">≋</b>Nivel actual</span><strong>${Number(c.currentLiters || 0).toLocaleString()} L</strong><div class="water-bar"><div class="water-fill" style="width:${Math.min(c.percentage || 0, 100)}%"></div></div><small>${c.percentage || 0}% de capacidad</small></div>
+      <div class="metric"><span><b class="metric-icon">⌂</b>Viviendas</span><strong>${data.houses}</strong><small>${data.residents} habitantes censados</small></div>
+      <div class="metric"><span><b class="metric-icon">◷</b>Consumo registrado</span><strong>${Number(data.monthlyConsumptionLiters).toLocaleString()} L</strong><small>Histórico mensual</small></div>
+      <div class="metric"><span><b class="metric-icon">↘</b>Días estimados</span><strong>${data.estimatedDaysRemaining ?? 'N/D'}</strong><small>Según consumo promedio</small></div>
+      <div class="metric"><span><b class="metric-icon">Q</b>Pagos</span><strong>Q ${Number(data.paymentsTotal).toFixed(2)}</strong><small>Total registrado</small></div>
+      <div class="metric"><span><b class="metric-icon">⚙</b>Mantenimientos</span><strong>${data.pendingMaintenance}</strong><small>Órdenes pendientes</small></div>
+      <div class="metric"><span><b class="metric-icon">!</b>Notificaciones</span><strong>${data.unreadNotifications}</strong><small>No leídas</small></div>
+      <div class="metric"><span><b class="metric-icon">↓</b>Consumo diario</span><strong>${Number(data.dailyConsumptionLiters || 0).toLocaleString()} L</strong><small>Con lecturas sucesivas</small></div>
     </div>
     <div class="grid two">
       <div class="card"><h2>Alertas recientes</h2>${renderNotifications(data.notifications)}</div>
@@ -287,6 +323,17 @@ async function loadNotifications() {
   $('#notificationsList').innerHTML = renderNotifications(rows, { hideRead: true, showMarkRead: state.user?.role !== 'cliente' });
 }
 
+async function loadUsers() {
+  const rows = await api('/users');
+  renderTable('#usersTable', rows, [
+    {label:'Nombre', render:u => `${u.firstName} ${u.lastName}`},
+    {label:'DPI', key:'dpi'},
+    {label:'Dirección', key:'address'},
+    {label:'Rol', render:u => `<span class="badge">${u.role}</span>`},
+    {label:'Estado', render:u => u.isBlocked ? '<span class="badge danger">Bloqueado</span>' : '<span class="badge ok">Activo</span>'}
+  ]);
+}
+
 async function markNotificationAsRead(notificationId) {
   await api(`/notifications/${notificationId}/read`, { method: 'POST' });
   await Promise.all([loadNotifications(), loadDashboard()]);
@@ -303,7 +350,7 @@ async function loadAll() {
     } else if (role === 'empleado') {
       tasks.push(loadDashboard(), loadHouses(), loadPayments());
     } else {
-      tasks.push(loadDashboard(), loadCistern(), loadHouses(), loadConsumptions(), loadPayments(), loadDistribution(), loadMaintenance());
+      tasks.push(loadDashboard(), loadCistern(), loadHouses(), loadConsumptions(), loadPayments(), loadDistribution(), loadMaintenance(), loadUsers());
     }
     await Promise.all(tasks);
   } catch (err) {
@@ -421,5 +468,7 @@ bindForm('#paymentForm', '/payments', 'POST', loadPayments);
 bindForm('#distributionForm', '/distribution-plans', 'POST', loadDistribution);
 bindForm('#maintenanceForm', '/maintenance-orders', 'POST', loadMaintenance);
 bindForm('#interventionForm', '/maintenance-interventions', 'POST', loadMaintenance);
+bindForm('#userForm', '/users', 'POST', loadUsers);
 
 setAuthVisible();
+decorateViewHeaders();
