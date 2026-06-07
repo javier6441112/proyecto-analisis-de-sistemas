@@ -1,0 +1,11 @@
+from .cistern_repository import CisternRepository
+from .consumption_repository import ConsumptionRepository
+from .distribution_repository import DistributionPlanRepository
+from .house_repository import HouseRepository
+from .maintenance_repository import MaintenanceRepository
+from .notification_repository import NotificationRepository
+from .payment_repository import PaymentRepository
+from .resident_repository import ResidentRepository
+from .user_repository import UserRepository
+from .water_reading_repository import WaterReadingRepository
+
