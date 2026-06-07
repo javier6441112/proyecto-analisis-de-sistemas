@@ -2,6 +2,8 @@ import os
 from flask import Flask, render_template
 from dotenv import load_dotenv
 from .extensions import db, migrate, cors
+from .factories import ModelFactory
+from .repositories import CisternRepository, HouseRepository, MaintenanceRepository, NotificationRepository, UserRepository
 
 
 def create_app():
@@ -30,18 +32,16 @@ def create_app():
 
     @app.cli.command("init-db")
     def init_db_command():
-        from .models import User, House, Cistern, WaterReading, Resident, MonthlyConsumption, Payment, MaintenanceOrder, Notification
+        from .models import House, MonthlyConsumption, Payment, Resident
         db.create_all()
-        if not User.query.filter_by(dpi="1234567890101").first():
-            admin = User(first_name="Admin", last_name="Sistema", address="Comunidad", dpi="1234567890101", role="administrador")
-            admin.set_password("Admin123*")
-            db.session.add(admin)
-        if not Cistern.query.first():
-            cistern = Cistern(name="Cisterna principal", capacity_liters=20000, current_liters=12000, min_threshold=4000, max_threshold=19000)
+        if not UserRepository().find_by_dpi("1234567890101"):
+            db.session.add(ModelFactory.demo_admin())
+        if not CisternRepository().first():
+            cistern = ModelFactory.demo_cistern()
             db.session.add(cistern)
             db.session.flush()
-            db.session.add(WaterReading(cistern_id=cistern.id, liters=12000, source="inicial", observation="Carga inicial"))
-        if not House.query.first():
+            db.session.add(ModelFactory.water_reading(cistern.id, 12000, "inicial", "Carga inicial"))
+        if not HouseRepository().first():
             h1 = House(house_number="A-01", owner_name="María López", address="Sector 1", status="activa")
             h2 = House(house_number="A-02", owner_name="Juan Pérez", address="Sector 1", status="activa")
             db.session.add_all([h1, h2])
@@ -54,10 +54,14 @@ def create_app():
                 Payment(house_id=h1.id, period="2026-04", amount=75, paid=True, receipt_number="REC-001"),
                 Payment(house_id=h2.id, period="2026-03", amount=75, paid=True, receipt_number="REC-002"),
             ])
-        if not MaintenanceOrder.query.first():
-            db.session.add(MaintenanceOrder(maintenance_type="Preventivo", description="Revisión de tuberías principales", responsible="Soporte técnico", status="pendiente"))
-        if not Notification.query.first():
-            db.session.add(Notification(title="Bienvenido", message="Sistema inicializado correctamente", notification_type="sistema", recipient_role="administrador"))
+        if not MaintenanceRepository().first_order():
+            db.session.add(ModelFactory.maintenance_order({
+                "maintenanceType": "Preventivo",
+                "description": "Revisión de tuberías principales",
+                "responsible": "Soporte técnico",
+            }))
+        if not NotificationRepository().first():
+            db.session.add(ModelFactory.notification("Bienvenido", "Sistema inicializado correctamente"))
         db.session.commit()
         print("Base de datos inicializada con datos de prueba.")
 
